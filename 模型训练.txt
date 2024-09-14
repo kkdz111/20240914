@@ -1,0 +1,815 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "151b5b95-ccc1-493b-b681-28faeb6c960e",
+   "metadata": {},
+   "source": [
+    "# 模型训练"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6d7bd3ef",
+   "metadata": {},
+   "source": [
+    "### 依赖包安装\n",
+    "<font color = 'red'>请运行以下代码，安装依赖包。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1e358aa9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!sudo pip install -r requirements.txt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0a0aebd8-94a9-4c41-9198-40fdf634dba4",
+   "metadata": {},
+   "source": [
+    "## 步骤1.数据预处理\n",
+    "\n",
+    "### 【任务说明】\n",
+    "\n",
+    "根据图片和对应的标注文件完成数据集的划分和标注信息提取。\n",
+    "\n",
+    "图片数据已采集好并存放于文件夹（“data/img”）中，与图片对应的标注文件则存放于文件夹（“data/outputs”）中。\n",
+    "\n",
+    "请依照任务书要求，执行以下步骤，并根据题目要求完成代码编写。"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1ec2b9b6-a052-4948-9e1a-e81c6bb5f315",
+   "metadata": {},
+   "source": [
+    "### 步骤1.1 类别名称提取\n",
+    "\n",
+    "### 【任务要求】\n",
+    "\n",
+    "此部分需要根据图片文件名称提取物品的类别名称。\n",
+    "    \n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 1】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.图片数据的名称由标签名与序号组成，如apple_1.jpg，<br><br/>请在下方`<1>`处填写存放有图片文件的文件夹地址，输出图片数据的**类别数**与**具体的类别名称**。。\n",
+    "\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "23064e79-c6ca-4d46-8df2-bff42e86dc43",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "BASE_PATH = os.path.dirname(os.path.abspath('__file__')) #常用搭配，显示当前路径\n",
+    "\n",
+    "classes=set()\n",
+    "for root, dirs, names in os.walk(<1>):    \n",
+    "    for name in names: \n",
+    "        if name.split('.')[-1] not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "            continue       \n",
+    "        classes.add(name.split('_')[0])\n",
+    "        \n",
+    "print(len(classes))  \n",
+    "print(sorted(list(classes)))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0aa88d7c-8d54-41f8-9339-073b488c3d05",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "import os\n",
+    "BASE_PATH = os.path.dirname(os.path.abspath('__file__')) #常用搭配，显示当前路径\n",
+    "\n",
+    "classes=set()\n",
+    "for root, dirs, names in os.walk(BASE_PATH+ '/data/img'):    \n",
+    "    for name in names: \n",
+    "        if name.split('.')[-1] not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "            continue       \n",
+    "        classes.add(name.split('_')[0])\n",
+    "\n",
+    "print(len(classes))  \n",
+    "print(sorted(list(classes)))\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a56369ad-0360-43ac-8004-a6b3017de4af",
+   "metadata": {},
+   "source": [
+    "<font color = 'red'>请打开[supermarket.name](./data/supermarket.name)标签文件，根据上一步得到的类别名称填写标签文件。</font>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dee7ce97-f4fd-426b-8a03-d672ad499f20",
+   "metadata": {},
+   "source": [
+    "### 步骤1.2列出数据集\n",
+    "\n",
+    "### 【任务要求】\n",
+    "\n",
+    "本任务需要根据要求将数据集按照比例划分为训练集和测试集，并保存对应的数据清单。\n",
+    "    \n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 2】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，读取图片文件地址，将图片地址进行**随机化排列**后保存地址到清单文件中（“data/list.txt”）,填写路径数组，对标签进行随机化。\n",
+    "\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e04511d9-ba84-4cd4-805d-89010573a3ed",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import random\n",
+    "from core.pack import extract_xml\n",
+    "\n",
+    "BASE_PATH = os.path.dirname(os.path.abspath('__file__')) #常用搭配，显示当前路径\n",
+    "\n",
+    "paths = []\n",
+    "for root, dirs, names in os.walk(BASE_PATH+ '/data/img'):    \n",
+    "    for name in names: \n",
+    "        if name.split('.')[-1] not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "            continue\n",
+    "        paths.append('./data/img/'+name)\n",
+    "        \n",
+    "        \n",
+    "random.shuffle(<1>)\n",
+    "\n",
+    "flist = open(BASE_PATH+ '/data/list.txt', 'w')\n",
+    "for img_path in paths:\n",
+    "    flist.write(img_path + '\\n')\n",
+    "flist.close()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ed79eed0-e747-42f0-b335-8fb38b14b3f9",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "import os\n",
+    "import random\n",
+    "from core.pack import extract_xml\n",
+    "\n",
+    "BASE_PATH = os.path.dirname(os.path.abspath('__file__')) #常用搭配，显示当前路径\n",
+    "\n",
+    "paths = []\n",
+    "for root, dirs, names in os.walk(BASE_PATH+ '/data/img'):    \n",
+    "    for name in names: \n",
+    "        if name.split('.')[-1] not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "            continue\n",
+    "        paths.append('./data/img/'+name)\n",
+    "        \n",
+    "        \n",
+    "random.shuffle(paths)\n",
+    "\n",
+    "flist = open(BASE_PATH+ '/data/list.txt', 'w')\n",
+    "for img_path in paths:\n",
+    "    flist.write(img_path + '\\n')\n",
+    "flist.close()\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "50d8a725-2db2-4367-8198-0c355f380960",
+   "metadata": {},
+   "source": [
+    "### 步骤1.3划分数据集\n",
+    "\n",
+    "### 【任务要求】\n",
+    "\n",
+    "本任务需要根据要求将数据集按照比例划分为训练集和测试集，并保存对应的数据清单。\n",
+    "    \n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 3】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，将图片文件地址清单按照7:3的比例分为训练数据清单和测试数据清单，其中训练数据占比为7，而测试数据占比为3,填写正确的数值，对训练清单和测试清单做划分。\n",
+    "\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4f9041e0-6327-40a2-b81f-61e54f8b22e2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import random\n",
+    "from core.pack import extract_xml\n",
+    "\n",
+    "BASE_PATH = os.path.dirname(os.path.abspath('__file__'))\n",
+    "INPUT_DIR= BASE_PATH +'/data/img'\n",
+    "paths = []\n",
+    "for path in (os.path.join(p, name) for p, _, names in os.walk(INPUT_DIR) for name in names):\n",
+    "    paths.append(path)\n",
+    "vp =  <1>       \n",
+    "mid = int(vp*len(paths)) "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "936ecbb6-ed86-4ab4-a59e-1cdd97d6a091",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "import os\n",
+    "import random\n",
+    "from core.pack import extract_xml\n",
+    "\n",
+    "BASE_PATH = os.path.dirname(os.path.abspath('__file__'))\n",
+    "INPUT_DIR= BASE_PATH +'/data/img'\n",
+    "paths = []\n",
+    "for path in (os.path.join(p, name) for p, _, names in os.walk(INPUT_DIR) for name in names):\n",
+    "    paths.append(path)\n",
+    "vp =  0.3       \n",
+    "mid = int(vp*len(paths)) \n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "47674a7a-b45d-4511-9368-ed135266e179",
+   "metadata": {},
+   "source": [
+    "<font color = 'red' >将训练数据清单保存为“data/train.txt”文件。<br><br/>请在下方`<2>`处填写正确的范围，保存训练清单。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "2f982978-b1e9-4d1c-b24c-b6d3ae7cc96e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ftrain = open(BASE_PATH+'/data/train.txt','w')\n",
+    "\n",
+    "for img_path in paths[<2>]:\n",
+    "    filename = img_path.split('/')[-1]\n",
+    "    pd = filename.split('.')[-1]\n",
+    "    if pd not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "        continue\n",
+    "\n",
+    "    path = BASE_PATH+'/data/outputs/'+filename.split('.')[0]+'.xml'\n",
+    "    \n",
+    "    ftrain.write(extract_xml(path,img_path)+'\\n')\n",
+    "ftrain.close()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "658716a2-d014-4a59-8c9c-e0d5266fd092",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "ftrain = open(BASE_PATH+'/data/train.txt','w')\n",
+    "\n",
+    "for img_path in paths[mid:]:\n",
+    "    filename = img_path.split('/')[-1]\n",
+    "    pd = filename.split('.')[-1]\n",
+    "    if pd not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "        continue\n",
+    "\n",
+    "    path = BASE_PATH+'/data/outputs/'+filename.split('.')[0]+'.xml'\n",
+    "    \n",
+    "    ftrain.write(extract_xml(path,img_path)+'\\n')\n",
+    "ftrain.close()\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "db100d32-5592-4413-a67b-adfcd07990e8",
+   "metadata": {},
+   "source": [
+    "<font color = 'red' >将测试数据清单保存为“data/test.txt”文件。<br><br/>请在下方`<3>`处填写正确的范围，保存测试清单。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bdd3fe1a-3a0e-4197-8ab1-11fd97dd3f7e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ftest = open(BASE_PATH+'/data/test.txt','w')\n",
+    "\n",
+    "for img_path in paths[<3>]:\n",
+    "    filename = img_path.split('/')[-1]\n",
+    "    pd = filename.split('.')[-1]\n",
+    "    if pd not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "        continue\n",
+    "\n",
+    "    path = BASE_PATH+'/data/outputs/'+filename.split('.')[0]+'.xml'\n",
+    "    \n",
+    "    ftest.write(extract_xml(path,img_path)+'\\n')\n",
+    "ftest.close()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f8206c73-d703-4b1b-b9e6-b19f6d054636",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "ftest = open(BASE_PATH+'/data/test.txt','w')\n",
+    "\n",
+    "for img_path in paths[0:mid]:\n",
+    "    filename = img_path.split('/')[-1]\n",
+    "    pd = filename.split('.')[-1]\n",
+    "    if pd not in (\"jpg\", \"png\", \"jpeg\"):\n",
+    "        continue\n",
+    "\n",
+    "    path = BASE_PATH+'/data/outputs/'+filename.split('.')[0]+'.xml'\n",
+    "    \n",
+    "    ftest.write(extract_xml(path,img_path)+'\\n')\n",
+    "ftest.close()\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a24c3ac7-ef1b-4765-9255-48d382497583",
+   "metadata": {},
+   "source": [
+    "## 步骤2.模型训练"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0acfa3a9-bc9d-41c9-8fa4-bdc6444b7fc7",
+   "metadata": {},
+   "source": [
+    "### 步骤2.1依赖包导入\n",
+    "<font color = 'red'>请运行以下代码，完成依赖包的导入。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5c69b3a2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import tensorflow as tf\n",
+    "import yaml\n",
+    "from core.utils.config import decode_cfg\n",
+    "from core.model.header import Header\n",
+    "from core.pack import DarknetConv2D, DarknetConv2D_BN_Leaky, PreprocessInput, inference\n",
+    "import os ##操作系统模块\n",
+    "import time  ##时间模块\n",
+    "from tensorflow.keras import optimizers  ##优化器\n",
+    "from core.utils import decode_cfg, load_weights  ##解析参数函数，加载模型权重函数\n",
+    "from core.dataset import Dataset  ##数据集\n",
+    "from core.callbacks import COCOEvalCheckpoint, CosineAnnealingScheduler, WarmUpScheduler  ##评估模型存储模型回调函数、学习率调整回调函数、预训练回调函数\n",
+    "from core.utils.optimizers import Accumulative ##优化器生成函数\n",
+    "from core.losses.loss import YOLOLoss as Loss  ##损失率函数\n",
+    "import cv2\n",
+    "import numpy as np\n",
+    "from core.utils import decode_cfg, load_weights\n",
+    "from core.image import draw_bboxes, preprocess_image, postprocess_image, read_image, read_video, Shader\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5d887f19-391b-4311-a8cb-72d84b94af08",
+   "metadata": {},
+   "source": [
+    "### 步骤2.2模型构建\n",
+    "<font color = 'red'>请运行以下代码，完成超参数读取。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "167ca677-9245-4ef8-9097-f8b56b31c14a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# 配置训练全局参数\n",
+    "cfg = decode_cfg('./cfgs/yolov3_tiny.yaml')\n",
+    "\n",
+    "IOU_THRESHOLD      = cfg[\"yolo\"][\"iou_threshold\"]\n",
+    "SCORE_THRESHOLD    = cfg[\"yolo\"][\"score_threshold\"]\n",
+    "MAX_OUTPUTS        = cfg[\"yolo\"][\"max_boxes\"]\n",
+    "STRIDES            = cfg[\"yolo\"][\"strides\"]\n",
+    "MASK               = cfg[\"yolo\"][\"mask\"]\n",
+    "ANCHORS            = cfg[\"yolo\"][\"anchors\"]\n",
+    "NAME_PATH          = cfg['yolo']['name_path']                        #标签配置文件\n",
+    "LABELS             = cfg['yolo']['names']\n",
+    "NUM_CLASSES        = cfg[\"yolo\"][\"num_classes\"]                      #标签类别数\n",
+    "TRAIN_ANNO_PATH    = cfg[\"train\"][\"anno_path\"]                       #加载训练数据清单\n",
+    "TEST_ANNO_PATH     = cfg[\"test\"][\"anno_path\"]                        #加载测试数据清单\n",
+    "LOSS_TYPE          = cfg['train']['loss_type']\n",
+    "BATCH_SIZE         = cfg[\"train\"][\"batch_size\"]                      #设置批处理图片数量\n",
+    "INIT_WEIGHT_PATH   = cfg[\"train\"][\"init_weight_path\"]                #载入预训练权重\n",
+    "SAVE_NAME          = cfg[\"train\"][\"save_name\"]                       #模型权重文件保存命名格式\n",
+    "SAVE_WEIGHT_PATH   = cfg[\"train\"][\"save_weight_path\"]                #模型权重文件保存路径\n",
+    "IGNORE_THRESHOLD   = cfg[\"train\"][\"ignore_threshold\"]                #用于过滤的阈值\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4608fe0f-658d-43b6-a87e-d24538de4e19",
+   "metadata": {},
+   "source": [
+    "<font color = 'red'>请运行以下代码，完成模型构建。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c356b434-cd15-4470-a949-11409c206428",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "input_size=None\n",
+    "name=None\n",
+    "\n",
+    "if input_size is None:\n",
+    "    x = inputs = tf.keras.Input([None, None, 3])\n",
+    "else:\n",
+    "    x = inputs = tf.keras.Input([input_size, input_size, 3])\n",
+    "\n",
+    "x = PreprocessInput()(x)\n",
+    "\n",
+    "x = DarknetConv2D_BN_Leaky(16, 3)(x)\n",
+    "x = tf.keras.layers.MaxPool2D(2, 2, \"same\")(x)\n",
+    "x = DarknetConv2D_BN_Leaky(32, 3)(x)\n",
+    "x = tf.keras.layers.MaxPool2D(2, 2, \"same\")(x)\n",
+    "x = DarknetConv2D_BN_Leaky(64, 3)(x)\n",
+    "x = tf.keras.layers.MaxPool2D(2, 2, \"same\")(x)\n",
+    "x = DarknetConv2D_BN_Leaky(128, 3)(x)\n",
+    "x = tf.keras.layers.MaxPool2D(2, 2, \"same\")(x)\n",
+    "x = x_8 = DarknetConv2D_BN_Leaky(256, 3)(x)\n",
+    "x = tf.keras.layers.MaxPool2D(2, 2, \"same\")(x)\n",
+    "x = DarknetConv2D_BN_Leaky(512, 3)(x)\n",
+    "x = tf.keras.layers.MaxPool2D(2, 1, \"same\")(x)\n",
+    "x = DarknetConv2D_BN_Leaky(1024, 3)(x)\n",
+    "\n",
+    "x = x_13 = DarknetConv2D_BN_Leaky(256, 1)(x)\n",
+    "x = DarknetConv2D_BN_Leaky(512, 3)(x)\n",
+    "output_0 = DarknetConv2D(len(MASK[0]) * (NUM_CLASSES + 5), 1)(x)\n",
+    "\n",
+    "x = DarknetConv2D_BN_Leaky(128, 1)(x_13)\n",
+    "x = tf.keras.layers.UpSampling2D(2)(x)\n",
+    "x = tf.keras.layers.Concatenate()([x, x_8])\n",
+    "\n",
+    "x = DarknetConv2D_BN_Leaky(256, 3)(x)\n",
+    "output_1 = DarknetConv2D(len(MASK[1]) * (NUM_CLASSES + 5), 1)(x)\n",
+    "\n",
+    "from core.model.header import Header\n",
+    "\n",
+    "model = tf.keras.Model(inputs, (output_0, output_1), name=name)\n",
+    "\n",
+    "outputs = Header(NUM_CLASSES, ANCHORS, MASK, STRIDES, MAX_OUTPUTS, IOU_THRESHOLD, SCORE_THRESHOLD)(\n",
+    "    (output_0, output_1))\n",
+    "\n",
+    "eval_model = tf.keras.Model(inputs, outputs, name=name)\n",
+    "\n",
+    "model.summary()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "844941f0-4aaf-4693-aa02-423242e4a000",
+   "metadata": {},
+   "source": [
+    "### 步骤2.3模型训练\n",
+    "<font color = 'red'>请填写代码中的缺失部分，并运行以下代码，完成模型训练。</font>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "179edeae-a619-423d-9424-28a0135ed951",
+   "metadata": {},
+   "source": [
+    "<font color = 'red' >请在下方`< >`处填写相关超参数<br><br>参数说明:<br/><br>`LEARN_RATE_INITLEARN_RATE_INIT`:初始学习率初始学习率<br/><br>`LEARN_RATE_ENDLEARN_RATE_END`:最终学习率最终学习率<br/><br>`WARMUP_LEARN_RATEWARMUP_LEARN_RATE`:预热最大学习率预热最大学习率<br/></font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4815f28c-3f96-483c-9d09-454e19ab27c7",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "LEARN_RATE_INIT    = <1>                                    #初始学习率\n",
+    "LEARN_RATE_END     = <2>                                    #最终学习率\n",
+    "WARMUP_LEARN_RATE  = <3>                                    #预热最大学习率"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ab9eaa4d-f55b-4099-81c4-96a90ce70149",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "LEARN_RATE_INIT    = 1e-6                                    #初始学习率\n",
+    "LEARN_RATE_END     = 1e-4                                    #最终学习率\n",
+    "WARMUP_LEARN_RATE  = 1e-6                                    #预热最大学习率\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1c213f70-b171-43c9-bfb9-fd7600aec7fb",
+   "metadata": {},
+   "source": [
+    "<font color = 'red'>请运行以下代码，完成模型卷积层构建。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bc817cac-f771-44d1-9c94-f27afd00ff3c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "WARMUP_EPOCHS      = 1                                    #模型预热训练次数\n",
+    "EPOCHS             = 2                                    #模型最大训练次数\n",
+    "num = 29  ##网络层数\n",
+    "#cfg = decode_cfg(YAML_PATH) ##配置文件，上方代码已经读取过\n",
+    "train_dataset = Dataset(cfg) ##获取训练集数据\n",
+    "epoch_steps = len(train_dataset)  ##训练数据集长度\n",
+    "    \n",
+    "ckpt_path = os.path.join(SAVE_WEIGHT_PATH, 'tmp', time.strftime(\"%Y%m%d%H%M\", time.localtime()))    #创建模型权重文件保存路径，加上标签，加上时间戳\n",
+    "\n",
+    "if not os.path.isdir(ckpt_path):    # 判断模型权重文件保存路径是否存在，不存在则创建\n",
+    "    os.makedirs(ckpt_path)\n",
+    "    os.makedirs(os.path.join(ckpt_path, 'train', 'plugins', 'profile'))\n",
+    "    \n",
+    "loss = [Loss(ANCHORS[MASK[i]],\n",
+    "             STRIDES[i],\n",
+    "             train_dataset.num_classes,\n",
+    "             IGNORE_THRESHOLD,\n",
+    "             LOSS_TYPE) for i in range(len(MASK))]\n",
+    "warmup_callback = [WarmUpScheduler(learning_rate=WARMUP_LEARN_RATE, warmup_step=WARMUP_EPOCHS * epoch_steps, verbose=1)]\n",
+    "eval_callback = [COCOEvalCheckpoint(save_path=os.path.join(ckpt_path, SAVE_NAME),\n",
+    "                                    eval_model=eval_model,\n",
+    "                                    model_cfg=cfg,\n",
+    "                                    verbose=1)]\n",
+    "lr_callback = [CosineAnnealingScheduler(learning_rate=LEARN_RATE_INIT,\n",
+    "                                        eta_min=LEARN_RATE_END,\n",
+    "                                        T_max=EPOCHS * epoch_steps,\n",
+    "                                        verbose=1)]\n",
+    "opt = Accumulative(optimizers.Adam(lr=0.), 16)\n",
+    "for i in range(num):\n",
+    "    model.layers[i].trainable = False\n",
+    "    print(model.layers[i].name)\n",
+    "print('Freeze the first {} layers of total {} layers.'.format(num, len(model.layers)))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "39a6231c-b695-4497-8f76-feb11c915494",
+   "metadata": {},
+   "source": [
+    "<font color = 'red'>请运行以下代码，完成模型训练。</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c8e712ce-2cc1-4f7a-9e44-be69e60000d1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model.compile(loss=loss, optimizer=opt, run_eagerly=False)\n",
+    "model.fit(train_dataset,\n",
+    "          steps_per_epoch=epoch_steps,\n",
+    "          epochs=WARMUP_EPOCHS,\n",
+    "          callbacks=warmup_callback,\n",
+    "          verbose=1\n",
+    "          )\n",
+    "\n",
+    "model.compile(loss=loss, optimizer=opt, run_eagerly=False)\n",
+    "model.fit(train_dataset,\n",
+    "          steps_per_epoch=epoch_steps,\n",
+    "          epochs=EPOCHS // 5 * 2,\n",
+    "          callbacks=eval_callback + lr_callback,\n",
+    "          verbose=1\n",
+    "          )\n",
+    "\n",
+    "for i in range(len(model.layers)): \n",
+    "    model.layers[i].trainable = True\n",
+    "\n",
+    "model.compile(loss=loss, optimizer=opt, run_eagerly=False)\n",
+    "model.fit(train_dataset,\n",
+    "          steps_per_epoch=epoch_steps,\n",
+    "          epochs=EPOCHS // 5 * 3,\n",
+    "          callbacks=eval_callback + lr_callback,\n",
+    "          verbose=1\n",
+    "          )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "342072ed-d506-4989-ba3e-78a1d8a89b8c",
+   "metadata": {},
+   "source": [
+    "## 步骤3.模型评估"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4be3b52f-1eaf-4bb4-b4b1-13550ff4af66",
+   "metadata": {},
+   "source": [
+    "完成图片检测，在图片上绘制检测结果并保存到detectanswer文件夹下。\n",
+    "    \n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 4】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，显示图片。\n",
+    "\n",
+    "2.补全`<2>`处代码，将图片从BGR转换成RGB。\n",
+    "    \n",
+    "3.补全`<3>`处代码，保存图片至`writepath`下。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "25f0e7e4-e53a-404f-874a-83cf9da68740",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "shader = Shader(NUM_CLASSES)\n",
+    "names = LABELS\n",
+    "imgpaths = os.listdir('./detectdata')\n",
+    "load_weights(model, INIT_WEIGHT_PATH) \n",
+    "for p in imgpaths: \n",
+    "    path = os.path.join(\"./detectdata\",p)\n",
+    "    img = read_image(path)\n",
+    "    # 图片检测\n",
+    "    ms, bboxes, scores, classes = inference(img,eval_model)\n",
+    "    # 在图片上绘制检测结果\n",
+    "    img = draw_bboxes(img, bboxes, scores, classes, names, shader)\n",
+    "    <1> # 显示图片\n",
+    "    plt.axis('off') # 不显示坐标轴\n",
+    "    plt.show()\n",
+    "    # 将图片从BGR转换成RGB\n",
+    "    img = <2>\n",
+    "    # 保存图片\n",
+    "    writepath = os.path.join(\"./detectanswer\",p)\n",
+    "    <3>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e21df986-5a55-491f-bf27-f52a281b582c",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "shader = Shader(NUM_CLASSES)\n",
+    "names = LABELS\n",
+    "imgpaths = os.listdir('./detectdata')\n",
+    "load_weights(model, INIT_WEIGHT_PATH) \n",
+    "for p in imgpaths: \n",
+    "    path = os.path.join(\"./detectdata\",p)\n",
+    "    img = read_image(path)\n",
+    "    # 图片检测\n",
+    "    ms, bboxes, scores, classes = inference(img,eval_model)\n",
+    "    # 在图片上绘制检测结果\n",
+    "    img = draw_bboxes(img, bboxes, scores, classes, names, shader)\n",
+    "    plt.imshow(img) # 显示图片\n",
+    "    plt.axis('off') # 不显示坐标轴\n",
+    "    plt.show()\n",
+    "    # 将图片从BGR转换成RGB\n",
+    "    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)\n",
+    "    # 保存图片\n",
+    "    writepath = os.path.join(\"./detectanswer\",p)\n",
+    "    cv2.imwrite(writepath, img)\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

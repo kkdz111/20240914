@@ -1,0 +1,551 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "19c58d6e-10d6-4d10-9c3b-9b7bbca86dd2",
+   "metadata": {},
+   "source": [
+    "# 多模态模型应用"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "29d99586-dfd0-407f-bcf1-8d9f07f315ac",
+   "metadata": {},
+   "source": [
+    "# 依赖库安装"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "2f3208f5-3c99-4e7a-bb38-061ac031f44e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!pip install sklearn\n",
+    "!pip install seaborn"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dbf82bb5-8805-43a4-a541-672ea902a782",
+   "metadata": {},
+   "source": [
+    "# 步骤1.导入依赖库"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4b1b8179-d148-4c22-9920-c29608d13101",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import tensorflow as tf\n",
+    "from tensorflow.keras.models import Sequential, Model\n",
+    "from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense, Input, concatenate\n",
+    "from tensorflow.keras.preprocessing.text import Tokenizer\n",
+    "from tensorflow.keras.preprocessing.sequence import pad_sequences\n",
+    "from tensorflow.keras.utils import to_categorical\n",
+    "from sklearn.metrics import confusion_matrix\n",
+    "from sklearn.metrics import accuracy_score\n",
+    "import seaborn as sns\n",
+    "from sklearn.feature_extraction.text import TfidfVectorizer"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "98fdaff9-8fd0-4542-9b95-d86ca0bb34d1",
+   "metadata": {},
+   "source": [
+    "# 步骤2.文本数据清洗\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 1】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，利用正则表达式过滤掉文本中包含的标签。\n",
+    "\n",
+    "2.补全`<2>`处代码，利用正则表达式过滤掉文本中包含的数字。\n",
+    "\n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6dffd60c-a1c4-4718-9a57-3370c97370ec",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import re\n",
+    "def clean_text(sentence):\n",
+    "    sentence = <1>\n",
+    "    sentence = <2>\n",
+    "    sentence = re.sub(r'[^\\w\\s]', '', sentence)\n",
+    "    sentence = sentence.replace(' ', '')\n",
+    "    return sentence\n",
+    " \n",
+    "text = \"<p>这是一个包含HTML标签、数字12 3和特 殊符  号以及空格!@#的文本。</p>\"\n",
+    "clean_text = clean_text(text)\n",
+    "print(clean_text)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8e13cc4b-a1d0-401f-af06-39aa2c637df8",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "import re\n",
+    "def clean_text(sentence):\n",
+    "    sentence = re.sub(r'<.*?>', '', sentence)\n",
+    "    sentence = re.sub(r'\\d+', '', sentence)\n",
+    "    sentence = re.sub(r'[^\\w\\s]', '', sentence)\n",
+    "    sentence = sentence.replace(' ', '')\n",
+    "    return sentence\n",
+    " \n",
+    "text = \"<p>这是一个包含HTML标签、数字12 3和特 殊符  号以及空格!@#的文本。</p>\"\n",
+    "clean_text = clean_text(text)\n",
+    "print(clean_text)\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "730356c8-b88b-45a8-b920-b3da0b974a2e",
+   "metadata": {},
+   "source": [
+    "# 步骤3.词向量化\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 2】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，创建文本特征提取的工具(将文本转换为TF-IDF特征表示)。\n",
+    "\n",
+    "2.补全`<2>`处代码，将文本进行拟合转换返回对应的`TF-IDF`值。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1efc8682-1afb-4506-95b2-1e1a76e40d6d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "corpus = ['人工 智能', '发展 历史']\n",
+    "vectorizer = <1>\n",
+    "tfidf = <2>\n",
+    "print(tfidf.toarray())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a2b2d745-9797-4004-b72d-cf61f9d61eeb",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "corpus = ['人工 智能', '发展 历史']\n",
+    "vectorizer = TfidfVectorizer()\n",
+    "tfidf = vectorizer.fit_transform(corpus)\n",
+    "print(tfidf.toarray())\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d880777c-6057-4e4b-a547-5b73eb7a6baa",
+   "metadata": {},
+   "source": [
+    "# 步骤4.图像数据划分\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 3】\n",
+    "        \n",
+    "1.现在`classification`文件夹下存在`banana`与`strawberry`的图片数据，请编写一段代码将所有的图像修改成`.jpg`结尾的格式  \n",
+    "并将`banana`与`strawberry`数据进行划分，`banana`的数据存入`./banana`文件夹下，`strawberry`数据文件存入`./strawberry`文件夹下。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d8a06354-de10-4e5e-acd5-cfdfce6458b0",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "id": "846494a9-9b0f-4baa-ba3b-694376d72d82",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "import shutil\n",
+    "data_path = './data/classification/'\n",
+    "for name in os.listdir(data_path):\n",
+    "    if 'jpeg' in name:\n",
+    "        os.rename(data_path + name, data_path+name.split('.')[0]+'.jpg')\n",
+    "    if 'png' in name:\n",
+    "        os.rename(data_path + name, data_path+name.split('.')[0]+ '.jpg')\n",
+    "for name in os.listdir(data_path):\n",
+    "    if 'strawberry' in name:\n",
+    "        shutil.move(data_path+name, './strawberry')\n",
+    "    if 'banana' in name:\n",
+    "        shutil.move(data_path+name, './banana')\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f3786870-3348-48ba-8d8a-bd4b9d9c12d9",
+   "metadata": {},
+   "source": [
+    "# 步骤5.图像数据裁剪\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 4】\n",
+    "    \n",
+    "1.现有图片数据存放于`./data`目录下，`images`为图片数据文件夹，`annotation`为目标检测标注数据文件夹，请根据标注数据文件对对应图片进行裁剪，  \n",
+    "裁剪后保存在`./data/cut_img`文件夹下，`images`文件名称与`annotation`一一对应。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4ecb3086-22be-4e4a-9e31-1d4c312f6325",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5bf4aa0d-c5f5-4e92-b62a-bb8e2d976655",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "import os\n",
+    "import cv2\n",
+    "\n",
+    "data_dir = './data/images'\n",
+    "anno_dir = './data/annotation'\n",
+    "\n",
+    "for path in os.listdir(anno_dir):\n",
+    "    if \".ipynb_checkpoints\" in path:\n",
+    "        continue\n",
+    "    for line in open(os.path.join(anno_dir,path)):\n",
+    "        if '<xmin>' in line:\n",
+    "            begin = line.find('<xmin>') + len('<xmin>')\n",
+    "            end = line.find('</xmin>')\n",
+    "            xmin = line[begin:end]\n",
+    "        if '<ymin>' in line:\n",
+    "            begin = line.find('<ymin>') + len('<ymin>')\n",
+    "            end = line.find('</ymin>')\n",
+    "            ymin = line[begin:end]\n",
+    "        if '<xmax>' in line:\n",
+    "            begin = line.find('<xmax>') + len('<xmax>')\n",
+    "            end = line.find('</xmax>')\n",
+    "            xmax = line[begin:end]\n",
+    "        if '<ymax>' in line:\n",
+    "            begin = line.find('<ymax>') + len('<ymax>')\n",
+    "            end = line.find('</ymax>')\n",
+    "            ymax = line[begin:end]\n",
+    "            result = xmin + ' ' + ymin + ' ' + xmax + ' ' + ymax\n",
+    "    img = cv2.imread(os.path.join(data_dir,path)+'.jpg')\n",
+    "    img = img[int(ymin):int(ymax),int(xmin):int(xmax)]\n",
+    "    cv2.imwrite(os.path.join('./data/cut_img',path)+'.jpg',img)\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6c859605-0d37-4a35-8d1d-1704826c44cc",
+   "metadata": {},
+   "source": [
+    "# 步骤6.模型文本、图像数据处理"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0825c654-e336-443e-a120-d510d07184f9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "texts = [\"基于机器学习的文本图像关联分析是人工智能领域的重要研究方向。\",\n",
+    "         \"图像识别和自然语言处理的结合将推动智能系统的发展。\",\n",
+    "         \"文本和图像数据的关联分析可以应用于多个领域，如医学、社交媒体等。\"]\n",
+    "\n",
+    "image_features = np.random.rand(3, 100)\n",
+    "labels = np.array([0,0,1])\n",
+    "max_words = 1000\n",
+    "max_len = 20\n",
+    "tokenizer = Tokenizer(num_words=max_words)\n",
+    "tokenizer.fit_on_texts(texts)\n",
+    "sequences = tokenizer.texts_to_sequences(texts)\n",
+    "word_index = tokenizer.word_index\n",
+    "data = pad_sequences(sequences, maxlen=max_len)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "53d59ed5-8314-4b5f-a7b6-b2e847efe664",
+   "metadata": {},
+   "source": [
+    "# 步骤7.模型结构定义\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 5】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，构建一个全局最大池化层，对卷积核的输出进行池化操作保留最显著特征。\n",
+    "\n",
+    "2.补全`<2>`处代码，构建一个输入层，输入的大小由前面的图像特征数据来决定。\n",
+    "    \n",
+    "3.补全`<3>`处代码，将文本特征与图像特征合并形成一个统一的特征向量。\n",
+    "    \n",
+    "4.补全`<4>`处代码，构建一个输出层，采用`Sigmoid`激活函数输出一个二元分类结果。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "175123a6-88e3-4c2f-8363-9d4acd0744e4",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "text_input = Input(shape=(max_len,))\n",
+    "embedding_layer = Embedding(max_words, 50, input_length=max_len)(text_input)\n",
+    "conv1d_layer = Conv1D(128, 5, activation='relu')(embedding_layer)\n",
+    "global_maxpooling_layer = <1>\n",
+    "image_input = <2>\n",
+    "dense_layer = Dense(128, activation='relu')(image_input)\n",
+    "merged = <3>\n",
+    "dense_layer_combined = Dense(64, activation='relu')(merged)\n",
+    "output_layer = <4>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "278415f0-c434-45d2-a793-8f2f15458807",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "text_input = Input(shape=(max_len,))\n",
+    "embedding_layer = Embedding(max_words, 50, input_length=max_len)(text_input)\n",
+    "conv1d_layer = Conv1D(128, 5, activation='relu')(embedding_layer)\n",
+    "global_maxpooling_layer = GlobalMaxPooling1D()(conv1d_layer)\n",
+    "image_input = Input(shape=(100,))\n",
+    "dense_layer = Dense(128, activation='relu')(image_input)\n",
+    "merged = concatenate([global_maxpooling_layer, dense_layer])\n",
+    "dense_layer_combined = Dense(64, activation='relu')(merged)\n",
+    "output_layer = Dense(1, activation='sigmoid')(dense_layer_combined)\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8516defe-a15d-463b-862e-59d3bb6d1fb8",
+   "metadata": {},
+   "source": [
+    "# 步骤8.模型训练"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0688444f-eb41-4715-99ad-115cb125c79e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model_combined = Model(inputs=[text_input, image_input], outputs=output_layer)\n",
+    "model_combined.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])\n",
+    "history = model_combined.fit([data, image_features], labels, epochs=5, batch_size=2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bdb230a6-8282-4cfc-8455-ba75968ad2d5",
+   "metadata": {},
+   "source": [
+    "# 步骤9.模型训练过程图\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 6】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全下方代码绘制出模型训练过程中损失值情况与精确度情况。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息，示例如下：\n",
+    "\n",
+    "</font>\n",
+    "\n",
+    "<img style=\"float: left;\" width=250； src=\"./train.png\" > "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "487c0d82-f611-4a89-9aa9-c81819e08275",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fbe232b1-db43-414f-8d2a-d3a2bf76f2bd",
+   "metadata": {},
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "plt.plot(history.history['loss'], label='Training Loss')\n",
+    "plt.title('Training Loss')\n",
+    "plt.xlabel('Epoch')\n",
+    "plt.ylabel('Loss')\n",
+    "plt.legend()\n",
+    "plt.show()\n",
+    "\n",
+    "plt.plot(history.history['accuracy'], label='Training accuracy')\n",
+    "plt.title('accuracy')\n",
+    "plt.xlabel('Epoch')\n",
+    "plt.ylabel('accuracy')\n",
+    "plt.legend()\n",
+    "plt.show()\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c88c5f6e-632b-4e64-8492-29e601365c9b",
+   "metadata": {},
+   "source": [
+    "# 步骤10.模型预测"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5c3c733e-c58f-467c-a991-d9c2e7dd64a1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "predictions = model_combined.predict([data, image_features])\n",
+    "print(predictions)\n",
+    "print(labels)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "511798cb-a3c6-4752-bb0a-8c4218564dc0",
+   "metadata": {},
+   "source": [
+    "# 步骤11.模型评估"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "7382c8cb-1033-42be-a0a8-05379a669e88",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from sklearn.metrics import accuracy_score, classification_report\n",
+    "\n",
+    "binary_predictions = np.round(predictions).astype(int)\n",
+    "report = classification_report(labels, binary_predictions)\n",
+    "print('Classification Report:\\n', report)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
