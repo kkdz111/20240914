@@ -1,0 +1,1071 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "ee8ab2b7-1eaf-4223-bce4-dec6d7073947",
+   "metadata": {},
+   "source": [
+    "# <center> 情感分析预测</center>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bcd179a3-fcab-47d8-9cb2-9604ee6c2cb3",
+   "metadata": {},
+   "source": [
+    "# 依赖环境安装"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b3828e2e-a0d7-4f73-83e0-748d2eab422b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!pip install sklearn\n",
+    "!pip install torchvision==0.12.0\n",
+    "!pip install pandas==1.3.4"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a4da7c22-3e9f-4777-91dc-9c8aa558e99a",
+   "metadata": {},
+   "source": [
+    "# 步骤1. 导入依赖库"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ccb34d3a-b038-4287-afa3-59524e5244ad",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import torch\n",
+    "import torch.nn.functional as F\n",
+    "import torch.nn as nn\n",
+    "import torch.optim as optim\n",
+    "from sklearn.feature_extraction.text import CountVectorizer\n",
+    "from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence\n",
+    "from torch.utils.data import DataLoader, Dataset\n",
+    "from tqdm import tqdm, tqdm_notebook, notebook"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "74780718-0e66-41a1-89fa-6334be5d21a4",
+   "metadata": {},
+   "source": [
+    "检查是否有GPU设备支持训练"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8741a398-2c2d-4318-ba4b-14dd21c46264",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\n",
+    "device"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f5d4f1dd-e7af-4d5a-a54a-0d9951bf4024",
+   "metadata": {},
+   "source": [
+    "# 步骤2. 读取数据"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0d8a7ba6-09b5-491a-8e5a-1143a577e058",
+   "metadata": {},
+   "source": [
+    "本任务需要读取数据集并对数据集进行可视化，数据集见“data/imdb_reviews.csv”文件。"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "457b5a6d-cb54-4587-8012-8fc968bf0ff2",
+   "metadata": {},
+   "source": [
+    "<font color =red>\n",
+    "\n",
+    "【题目 1】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.读取数据`data/imdb_reviews.csv`,并显示前10行数据。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cb27a771-2702-4980-972c-787fc558003d",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5e799cc8-3535-49a5-94b9-838c41839fa6",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "DATA_PATH = 'data/imdb_reviews.csv'\n",
+    "df = pd.read_csv(DATA_PATH)\n",
+    "df.head(10)\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8663455f-2b99-470d-be70-5d11c09cbb91",
+   "metadata": {},
+   "source": [
+    "# 步骤3.自定义数据集\n",
+    "创建一个自定义的数据集类，继承自 torch Dataset\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 2】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，将文本数据转换为数值向量。\n",
+    "\n",
+    "2.补全`<2>`处代码，创建分词器。\n",
+    "    \n",
+    "3.补全`<3>`处代码，返回指定索引处的数据。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5ac87a58-1511-40af-b6af-e413c65ed7c9",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "class Sequences(Dataset):\n",
+    "    def __init__(self, path, max_seq_len):\n",
+    "        self.max_seq_len = max_seq_len\n",
+    "        \n",
+    "        vectorizer = CountVectorizer(stop_words='english', min_df=0.015)\n",
+    "        <1>\n",
+    "        \n",
+    "        self.token2idx = vectorizer.vocabulary_\n",
+    "        self.token2idx['<PAD>'] = max(self.token2idx.values()) + 1\n",
+    "\n",
+    "        tokenizer = <2>\n",
+    "        \n",
+    "        self.encode = lambda x: [self.token2idx[token] for token in tokenizer(x)\n",
+    "                                 if token in self.token2idx]\n",
+    "        \n",
+    "        self.pad = lambda x: x + (max_seq_len - len(x)) * [self.token2idx['<PAD>']]\n",
+    "        \n",
+    "        sequences = [self.encode(sequence)[:max_seq_len] for sequence in df.review.tolist()]\n",
+    "        sequences, self.labels = zip(*[(sequence, label) for sequence, label\n",
+    "                                    in zip(sequences, df.label.tolist()) if sequence])\n",
+    "        \n",
+    "        self.sequences = [self.pad(sequence) for sequence in sequences]\n",
+    "\n",
+    "    def __getitem__(self, i):\n",
+    "        assert len(self.sequences[i]) == self.max_seq_len\n",
+    "        <3>\n",
+    "    \n",
+    "    def __len__(self):\n",
+    "        return len(self.sequences)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cbb2d656-5638-4d0b-bda3-e50f637798d7",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "class Sequences(Dataset):\n",
+    "    def __init__(self, path, max_seq_len):\n",
+    "        # 初始化数据集，传入CSV文件路径和最大序列长度\n",
+    "        self.max_seq_len = max_seq_len\n",
+    "        \n",
+    "        \n",
+    "        # 创建 CountVectorizer 将文本数据转换为数值向量\n",
+    "        vectorizer = CountVectorizer(stop_words='english', min_df=0.015)\n",
+    "        vectorizer.fit(df.review.tolist())\n",
+    "        \n",
+    "        # 创建从标记到索引的词汇映射，添加一个特殊标记 '<PAD>' 用于填充\n",
+    "        self.token2idx = vectorizer.vocabulary_\n",
+    "        self.token2idx['<PAD>'] = max(self.token2idx.values()) + 1\n",
+    "\n",
+    "        # 创建分词器\n",
+    "        tokenizer = vectorizer.build_analyzer()\n",
+    "        \n",
+    "        # 定义编码函数，将文本序列转换为索引序列\n",
+    "        self.encode = lambda x: [self.token2idx[token] for token in tokenizer(x)\n",
+    "                                 if token in self.token2idx]\n",
+    "        \n",
+    "        # 定义填充函数，用 '<PAD>' 填充序列使其达到最大序列长度\n",
+    "        self.pad = lambda x: x + (max_seq_len - len(x)) * [self.token2idx['<PAD>']]\n",
+    "        \n",
+    "        # 对每个文本序列进行编码和填充，得到编码后的序列和对应的标签\n",
+    "        sequences = [self.encode(sequence)[:max_seq_len] for sequence in df.review.tolist()]\n",
+    "        sequences, self.labels = zip(*[(sequence, label) for sequence, label\n",
+    "                                    in zip(sequences, df.label.tolist()) if sequence])\n",
+    "        \n",
+    "        # 对所有序列进行填充\n",
+    "        self.sequences = [self.pad(sequence) for sequence in sequences]\n",
+    "\n",
+    "    # 定义 __getitem__ 方法，返回指定索引处的数据\n",
+    "    def __getitem__(self, i):\n",
+    "        assert len(self.sequences[i]) == self.max_seq_len\n",
+    "        return self.sequences[i], self.labels[i]\n",
+    "    \n",
+    "    # 定义 __len__ 方法，返回数据集的长度\n",
+    "    def __len__(self):\n",
+    "        return len(self.sequences)\n",
+    "\n",
+    "\n",
+    "```\n",
+    "\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "53efdb75-5269-40bb-9ac2-9d805015ca2d",
+   "metadata": {},
+   "source": [
+    "调用Sequences类创建数据集"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6206ddbe-f5d5-4bb5-a469-391d6b9333fc",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "dataset = Sequences(DATA_PATH, max_seq_len=128)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "689e29d8-7163-49a1-9023-2d99fff989aa",
+   "metadata": {},
+   "source": [
+    "查看数据集大小"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3bc03732-2c47-489f-8bc2-072c2bd58d43",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "len(dataset.token2idx)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f6d7b2af-9e12-47b4-a7b5-6c37c8651793",
+   "metadata": {},
+   "source": [
+    "# 步骤4.数据加载与处理\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 3】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充，使模型的效果达到最优。\n",
+    "    \n",
+    "    \n",
+    "1.补全`<1>`处代码，将目标标签转换为 FloatTensor 类型的张量。\n",
+    "\n",
+    "2.补全`<2>`处代码，创建 DataLoader 对象，传入数据集、批处理大小和批处理函数。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "250c2771-c3c8-4aed-a545-586e2430cadb",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def collate(batch):\n",
+    "    inputs = torch.LongTensor([item[0] for item in batch])\n",
+    "    \n",
+    "    target = <1>\n",
+    "    \n",
+    "    return inputs, target\n",
+    "\n",
+    "batch_size = 2\n",
+    "\n",
+    "train_loader = <2>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "87b54233-6f0f-4dae-90d0-045999dacf82",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "# 定义一个用于批处理的函数 collate\n",
+    "def collate(batch):\n",
+    "    # 将输入序列转换为 LongTensor 类型的张量\n",
+    "    inputs = torch.LongTensor([item[0] for item in batch])\n",
+    "    \n",
+    "    # 将目标标签转换为 FloatTensor 类型的张量\n",
+    "    target = torch.FloatTensor([item[1] for item in batch])\n",
+    "    \n",
+    "    # 返回输入和目标张量\n",
+    "    return inputs, target\n",
+    "\n",
+    "# 定义批处理大小\n",
+    "batch_size = 2\n",
+    "\n",
+    "# 创建 DataLoader 对象，传入数据集和批处理函数\n",
+    "train_loader = DataLoader(dataset, batch_size=batch_size, collate_fn=collate)\n",
+    "\n",
+    "```\n",
+    "\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ca1b25ab-4995-4465-9e0b-68a5884e1921",
+   "metadata": {},
+   "source": [
+    "# 步骤5. 模型定义"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8118ef38-4800-404b-a899-9b5fbc8815cc",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "定义 RNN 模型类\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 4】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充，使模型的效果达到最优。\n",
+    "    \n",
+    "\n",
+    "1.补全`<1>`处代码，创建 GRU 层，输入数据的维度，隐藏状态的维度，网络的层数和批处理大小。\n",
+    "    \n",
+    "2.补全`<2>`处代码，使用 GRU 处理嵌入后的序列数据，获取输出和隐藏层状态。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "eb58beed-d839-47c5-847d-409cb97a4962",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "class RNN(nn.Module):\n",
+    "    def __init__(\n",
+    "        self,\n",
+    "        vocab_size,\n",
+    "        batch_size,\n",
+    "        hidden_size,\n",
+    "        embedding_dimension=100,\n",
+    "        n_layers=1,\n",
+    "        device='cpu',\n",
+    "    ):\n",
+    "        super(RNN, self).__init__()\n",
+    "        self.n_layers = n_layers\n",
+    "        self.hidden_size = hidden_size\n",
+    "        self.device = device\n",
+    "        self.batch_size = batch_size\n",
+    "        \n",
+    "        self.encoder = nn.Embedding(vocab_size, embedding_dimension)\n",
+    "        \n",
+    "        self.rnn = <1>\n",
+    "        \n",
+    "        self.decoder = nn.Linear(hidden_size, 1)\n",
+    "        \n",
+    "    def init_hidden(self):\n",
+    "        return torch.randn(self.n_layers, self.batch_size, self.hidden_size).to(self.device)\n",
+    "    \n",
+    "    def forward(self, inputs):\n",
+    "        batch_size = inputs.size(0)\n",
+    "        if batch_size != self.batch_size:\n",
+    "            self.batch_size = batch_size\n",
+    "            \n",
+    "        encoded = self.encoder(inputs)\n",
+    "        \n",
+    "        output, hidden = <2>\n",
+    "        \n",
+    "        output = self.decoder(output[:, :, -1]).squeeze()\n",
+    "        \n",
+    "        return output"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b38cd91f-ec89-4a4f-8f32-f3e226ce4e56",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "# 定义 RNN 模型类\n",
+    "class RNN(nn.Module):\n",
+    "    def __init__(\n",
+    "        self,\n",
+    "        vocab_size,\n",
+    "        batch_size,\n",
+    "        hidden_size,\n",
+    "        embedding_dimension=100,\n",
+    "        n_layers=1,\n",
+    "        device='cpu',\n",
+    "    ):\n",
+    "        super(RNN, self).__init__()\n",
+    "        self.n_layers = n_layers\n",
+    "        self.hidden_size = hidden_size\n",
+    "        self.device = device\n",
+    "        self.batch_size = batch_size\n",
+    "        \n",
+    "        # 创建嵌入层，用于将输入序列的标记转换为稠密的词嵌入表示\n",
+    "        self.encoder = nn.Embedding(vocab_size, embedding_dimension)\n",
+    "        \n",
+    "        # 创建 GRU 层，处理嵌入后的序列数据\n",
+    "        self.rnn = nn.GRU(\n",
+    "            embedding_dimension,\n",
+    "            hidden_size,\n",
+    "            num_layers=n_layers,\n",
+    "            batch_first=True,\n",
+    "        )\n",
+    "        \n",
+    "        # 创建线性层，用于将 GRU 输出映射为模型的输出\n",
+    "        self.decoder = nn.Linear(hidden_size, 1)\n",
+    "        \n",
+    "    # 初始化隐藏层状态\n",
+    "    def init_hidden(self):\n",
+    "        return torch.randn(self.n_layers, self.batch_size, self.hidden_size).to(self.device)\n",
+    "    \n",
+    "    # 定义前向传播函数\n",
+    "    def forward(self, inputs):\n",
+    "        # 避免在最后一个批次大小不同的情况下导致错误\n",
+    "        batch_size = inputs.size(0)\n",
+    "        if batch_size != self.batch_size:\n",
+    "            self.batch_size = batch_size\n",
+    "            \n",
+    "        # 将输入序列标记转换为词嵌入表示\n",
+    "        encoded = self.encoder(inputs)\n",
+    "        \n",
+    "        # 使用 GRU 处理嵌入后的序列数据，获取输出和隐藏层状态\n",
+    "        output, hidden = self.rnn(encoded, self.init_hidden())\n",
+    "        \n",
+    "        # 取 GRU 输出的最后一个时间步，通过线性层映射为模型的输出\n",
+    "        output = self.decoder(output[:, :, -1]).squeeze()\n",
+    "        \n",
+    "        return output\n",
+    "\n",
+    " ```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3031c105-a06f-428c-bd70-8e9d6d9473e0",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "# 步骤6.模型实例化\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 5】\n",
+    "    \n",
+    "请根据下列提示，完成代码的补充，使模型的效果达到最优。\n",
+    "    \n",
+    "    \n",
+    "1.补全代码，创建模型实例，模型参数有：循环神经网络 (RNN) 中隐藏状态的维度、词汇表数据集的大小、训练时的批次大小。\n",
+    "    \n",
+    "补全代码后，执行代码块，输出结果信息。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "2f64c2cc-405e-418b-b365-2fb49e0ece77",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "model = <1>\n",
+    "\n",
+    "model = model.to(device)\n",
+    "\n",
+    "model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4a85fb67-7de7-45f8-91c0-70a2406a1f89",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "# 创建 RNN 模型实例\n",
+    "model = RNN(\n",
+    "    hidden_size=128,\n",
+    "    vocab_size=len(dataset.token2idx),\n",
+    "    batch_size=batch_size,\n",
+    ")\n",
+    "\n",
+    "# 将模型移动到指定的计算设备（GPU 或 CPU）\n",
+    "model = model.to(device)\n",
+    "\n",
+    "# 打印模型\n",
+    "model\n",
+    "\n",
+    " ```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c6ddbe72-b57e-4ea2-8d37-1804b7abcc90",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "# 步骤7.模型损失函数和优化器\n",
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 6】\n",
+    "    \n",
+    "1.补全`<1>`处代码，定义二元交叉熵损失函数。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c5cfc188-6104-4a57-8e1d-45a5eb186288",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "criterion = <1>\n",
+    "\n",
+    "optimizer = optim.Adam([p for p in model.parameters() if p.requires_grad], lr=0.001)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bf706f32-2091-413e-824c-cf58364620dc",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "# 定义二元交叉熵损失函数\n",
+    "criterion = nn.BCEWithLogitsLoss()\n",
+    "\n",
+    "# 定义 Adam 优化器，仅优化需要梯度的参数\n",
+    "optimizer = optim.Adam([p for p in model.parameters() if p.requires_grad], lr=0.001)\n",
+    "\n",
+    " ```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fe6975e2-de04-4720-a1f6-ef010e65dc96",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "# 步骤9. 模型训练"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6c294496-4030-4eb9-8ebc-65a563d65652",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 7】\n",
+    "    \n",
+    "1.补全`<1>`处代码，将模型参数的梯度归零。\n",
+    "    \n",
+    "2.补全`<2>`处代码，使用优化器更新模型参数。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d0124af0-6a17-41f5-a615-a91857277e3b",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "model.train()\n",
+    "\n",
+    "train_losses = []\n",
+    "\n",
+    "for epoch in range(5):\n",
+    "    progress_bar = notebook.tqdm(train_loader, leave=False)\n",
+    "    \n",
+    "    losses = []\n",
+    "    \n",
+    "    total = 0\n",
+    "    \n",
+    "    for inputs, target in progress_bar:\n",
+    "        inputs, target = inputs.to(device), target.to(device)\n",
+    "\n",
+    "        model.<1>\n",
+    "        \n",
+    "        output = model(inputs)\n",
+    "    \n",
+    "        loss = criterion(output, target)\n",
+    "        \n",
+    "        loss.backward()\n",
+    "        \n",
+    "        nn.utils.clip_grad_norm_(model.parameters(), 3)\n",
+    "\n",
+    "        <2>\n",
+    "        \n",
+    "        progress_bar.set_description(f'Loss: {loss.item():.3f}')\n",
+    "        \n",
+    "        losses.append(loss.item())\n",
+    "        \n",
+    "        total += 1\n",
+    "    \n",
+    "    epoch_loss = sum(losses) / total\n",
+    "    train_losses.append(epoch_loss)\n",
+    "\n",
+    "    tqdm.write(f'Epoch #{epoch + 1}\\tTrain Loss: {epoch_loss:.3f}')\n",
+    "\n",
+    "torch.save(model.state_dict(),'train_model.pth')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bb1f81b6-dd09-496b-9c32-9b73fa35fd69",
+   "metadata": {
+    "jupyter": {
+     "outputs_hidden": true
+    },
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "# 将模型设置为训练模式\n",
+    "model.train()\n",
+    "\n",
+    "# 存储每个epoch的训练损失\n",
+    "train_losses = []\n",
+    "\n",
+    "# 循环进行训练\n",
+    "for epoch in range(5):\n",
+    "    # 使用 tqdm 创建一个进度条，用于显示训练进度\n",
+    "    progress_bar = notebook.tqdm(train_loader, leave=False)\n",
+    "    \n",
+    "    # 存储每个batch的损失\n",
+    "    losses = []\n",
+    "    \n",
+    "    # 统计总的batch数\n",
+    "    total = 0\n",
+    "    \n",
+    "    # 遍历每个batch\n",
+    "    for inputs, target in progress_bar:\n",
+    "        # 将输入和目标标签移动到指定设备上\n",
+    "        inputs, target = inputs.to(device), target.to(device)\n",
+    "\n",
+    "        # 将模型参数的梯度归零\n",
+    "        model.zero_grad()\n",
+    "        \n",
+    "        # 进行前向传播\n",
+    "        output = model(inputs)\n",
+    "    \n",
+    "        # 计算损失\n",
+    "        loss = criterion(output, target)\n",
+    "        \n",
+    "        # 反向传播\n",
+    "        loss.backward()\n",
+    "        \n",
+    "        # 对梯度进行裁剪，防止梯度爆炸\n",
+    "        nn.utils.clip_grad_norm_(model.parameters(), 3)\n",
+    "\n",
+    "        # 更新模型参数\n",
+    "        optimizer.step()\n",
+    "        \n",
+    "        # 更新进度条显示的损失信息\n",
+    "        progress_bar.set_description(f'Loss: {loss.item():.3f}')\n",
+    "        \n",
+    "        # 存储当前batch的损失\n",
+    "        losses.append(loss.item())\n",
+    "        \n",
+    "        # 统计总的batch数\n",
+    "        total += 1\n",
+    "    \n",
+    "    # 计算当前epoch的平均损失\n",
+    "    epoch_loss = sum(losses) / total\n",
+    "    train_losses.append(epoch_loss)\n",
+    "\n",
+    "    # 打印当前epoch的训练损失\n",
+    "    tqdm.write(f'Epoch #{epoch + 1}\\tTrain Loss: {epoch_loss:.3f}')\n",
+    "    \n",
+    "# 保存模型到本地\n",
+    "torch.save(model.state_dict(),'train_model.pth')\n",
+    " ```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4e03b6d5-0227-4e8f-9ab0-2c823f54319f",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "# 步骤10. 模型评估"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e3de6b5e-67cf-4874-ac55-b1392205efd0",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "\n",
+    "<font color =red>\n",
+    "\n",
+    "【题目 8】\n",
+    "    \n",
+    "1.补全`<1>`处代码，将模型设置为评估模式。\n",
+    "    \n",
+    "2.补全`<2>`处代码，使用 sigmoid 激活函数将输出转换为概率。\n",
+    "\n",
+    "</font>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9f7bf3f3-540b-4943-862a-063b4fda45cd",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def predict_sentiment(text):\n",
+    "    model = RNN(\n",
+    "    hidden_size=128,\n",
+    "    vocab_size=1104,\n",
+    "    batch_size=batch_size,\n",
+    "    )\n",
+    "    model.load_state_dict(torch.load('predict_model.pth'))\n",
+    "    dataset = Sequences(DATA_PATH, max_seq_len=128)\n",
+    "    \n",
+    "    <1>\n",
+    "\n",
+    "    with torch.no_grad():\n",
+    "        test_vector = torch.LongTensor([dataset.pad(dataset.encode(text))]).to(device)\n",
+    "        \n",
+    "        output = model(test_vector)\n",
+    "        \n",
+    "        prediction = <2>\n",
+    "\n",
+    "        if prediction > 0.5:\n",
+    "            print(f'{prediction:.3f}: 积极情绪')\n",
+    "        else:\n",
+    "            print(f'{prediction:.3f}: 消极情绪')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0412af98-adf3-4d7d-a908-f973dbb77d51",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "<details>\n",
+    "<summary><font color=red size=3>点击查看答案</font></summary>\n",
+    "<pre><code>\n",
+    "\n",
+    "```python\n",
+    "def predict_sentiment(text):\n",
+    "    model = RNN(\n",
+    "    hidden_size=128,\n",
+    "    vocab_size=1104,\n",
+    "    batch_size=batch_size,\n",
+    "    )\n",
+    "    model.load_state_dict(torch.load('predict_model.pth'))\n",
+    "    dataset = Sequences(DATA_PATH, max_seq_len=128)\n",
+    "    \n",
+    "    model.eval()\n",
+    "\n",
+    "    with torch.no_grad():\n",
+    "        test_vector = torch.LongTensor([dataset.pad(dataset.encode(text))]).to(device)\n",
+    "        \n",
+    "        output = model(test_vector)\n",
+    "        \n",
+    "        prediction = torch.sigmoid(output).item()\n",
+    "\n",
+    "        if prediction > 0.5:\n",
+    "            print(f'{prediction:.3f}: 积极情绪')\n",
+    "        else:\n",
+    "            print(f'{prediction:.3f}: 消极情绪')\n",
+    "\n",
+    "```\n",
+    "</code></pre>\n",
+    "</details>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5c32244e-0ec8-4f74-bac1-0c1d0b60fedf",
+   "metadata": {},
+   "source": [
+    "# 步骤11. 模型预测"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e673f3ad-02f8-4021-a9fa-c0fa0e674bcb",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "test_text = \"\"\"\n",
+    "I am the sort of person who never, ever watches animated movies, \n",
+    "but I make an exception for Thumbelina and the Swan Princess. \n",
+    "Being absolutely in love with the first installment of the series, \n",
+    "I bought this and sat down to watch it with a very biased mind, \n",
+    "determined to love it because I'd spent money buying it. I finished \n",
+    "the movie, and all I can think is THE HORROR!!! I wanted to like it, \n",
+    "I really did. I tried very, VERY hard to like it. But I couldn't enjoy \n",
+    "a second of this grueling film. The songs made me feel like ripping my \n",
+    "ears out of my head. The dialogue was so lame I felt myself twitching \n",
+    "with frustration and irritation every time someone opened his or her mouth. \n",
+    "The villain was laughable and I felt myself wanting Derek and Odette to \n",
+    "die in the end... and I was absolutely in love with them from the first film.\n",
+    "I am going to try repress the memory of this movie, because it almost destroyed \n",
+    "the first one for me. There is one song in the movie in which there are a series \n",
+    "of flashbacks to the first film. The difference in animation between the two \n",
+    "is made very obvious, and I began yearning for the first one and wishing \n",
+    "I'd never set eyes on the third.Do yourself and favor and don't waste your time.\n",
+    "\"\"\"\n",
+    "predict_sentiment(test_text)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4f1617c8-b541-433b-a1e6-e1845a385b86",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "test_text = \"\"\"\n",
+    "Cool Cat Saves The Kids is a symbolic masterpiece directed by Derek Savage that\n",
+    "is not only satirical in the way it makes fun of the media and politics, but in\n",
+    "the way in questions as how we humans live life and how society tells us to\n",
+    "live life.\n",
+    "\n",
+    "Before I get into those details, I wanna talk about the special effects in this\n",
+    "film. They are ASTONISHING, and it shocks me that Cool Cat Saves The Kids got\n",
+    "snubbed by the Oscars for Best Special Effects. This film makes 2001 look like\n",
+    "garbage, and the directing in this film makes Stanley Kubrick look like the\n",
+    "worst director ever. You know what other film did that? Birdemic: Shock and\n",
+    "Terror. Both of these films are masterpieces, but if I had to choose my\n",
+    "favorite out of the 2, I would have to go with Cool Cat Saves The Kids. It is\n",
+    "now my 10th favorite film of all time.\n",
+    "\n",
+    "Now, lets get into the symbolism: So you might be asking yourself, Why is Cool\n",
+    "Cat Orange? Well, I can easily explain. Orange is a color. Orange is also a\n",
+    "fruit, and its a very good fruit. You know what else is good? Good behavior.\n",
+    "What behavior does Cool Cat have? He has good behavior. This cannot be a\n",
+    "coincidence, since cool cat has good behavior in the film.\n",
+    "\n",
+    "Now, why is Butch The Bully fat? Well, fat means your wide. You wanna know who\n",
+    "was wide? Hitler. Nuff said this cannot be a coincidence.\n",
+    "\n",
+    "Why does Erik Estrada suspect Butch The Bully to be a bully? Well look at it\n",
+    "this way. What color of a shirt was Butchy wearing when he walks into the area?\n",
+    "I don't know, its looks like dark purple/dark blue. Why rhymes with dark? Mark.\n",
+    "Mark is that guy from the Room. The Room is the best movie of all time. What is\n",
+    "the opposite of best? Worst. This is how Erik knew Butch was a bully.\n",
+    "\n",
+    "and finally, how come Vivica A. Fox isn't having a successful career after\n",
+    "making Kill Bill.\n",
+    "\n",
+    "I actually can't answer that question.\n",
+    "\n",
+    "Well thanks for reading my review.\n",
+    "\"\"\"\n",
+    "predict_sentiment(test_text)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "88d80bf3-ff70-4093-8a5c-1e7e93d5f962",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "test_text = \"\"\"\n",
+    "Don't let any bullies out there try and shape your judgment on this gem of a\n",
+    "title.\n",
+    "\n",
+    "Some people really don't have anything better to do, except trash a great movie\n",
+    "with annoying 1-star votes and spread lies on the Internet about how \"dumb\"\n",
+    "Cool Cat is.\n",
+    "\n",
+    "I wouldn't be surprised to learn if much of the unwarranted negativity hurled\n",
+    "at this movie is coming from people who haven't even watched this movie for\n",
+    "themselves in the first place. Those people are no worse than the Butch the\n",
+    "Bully, the film's repulsive antagonist.\n",
+    "\n",
+    "As it just so happens, one of the main points of \"Cool Cat Saves the Kids\" is\n",
+    "in addressing the attitudes of mean naysayers who try to demean others who\n",
+    "strive to bring good attitudes and fun vibes into people's lives. The message\n",
+    "to be learned here is that if one is friendly and good to others, the world is\n",
+    "friendly and good to one in return, and that is cool. Conversely, if one is\n",
+    "miserable and leaving 1-star votes on IMDb, one is alone and doesn't have any\n",
+    "friends at all. Ain't that the truth?\n",
+    "\n",
+    "The world has uncovered a great, new, young filmmaking talent in \"Cool Cat\"\n",
+    "creator Derek Savage, and I sure hope that this is only the first of many\n",
+    "amazing films and stories that the world has yet to appreciate.\n",
+    "\n",
+    "If you are a cool person who likes to have lots of fun, I guarantee that this\n",
+    "is a movie with charm that will uplift your spirits and reaffirm your positive\n",
+    "attitudes towards life.\n",
+    "\"\"\"\n",
+    "predict_sentiment(test_text)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
